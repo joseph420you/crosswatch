@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 48" width="40" height="48">
+  <!-- Drop shadow -->
+  <defs>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1" stdDeviation="2" flood-color="#000" flood-opacity="0.3"/>
+    </filter>
+  </defs>
+  <!-- Pin body -->
+  <path d="M20 46 C20 46 4 30 4 18 C4 9.2 11.2 2 20 2 C28.8 2 36 9.2 36 18 C36 30 20 46 20 46Z" fill="#1a73e8" stroke="#fff" stroke-width="2" filter="url(#shadow)"/>
+  <!-- Camera icon -->
+  <g transform="translate(10, 9)" fill="white">
+    <rect x="2" y="4" width="14" height="10" rx="2"/>
+    <polygon points="18,6 24,3 24,15 18,12"/>
+    <circle cx="9" cy="9" r="3" fill="#1a73e8"/>
+    <circle cx="9" cy="9" r="1.5" fill="white"/>
+  </g>
+</svg>
