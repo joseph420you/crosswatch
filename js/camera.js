@@ -5,7 +5,7 @@
 
 const CameraModule = (() => {
   // CORS Proxy
-  const CORS_PROXY = 'https://corsproxy.io/?url=';
+  const CORS_PROXY = 'https://api.allorigins.win/raw?url=';
   const TWIPCAM_BASE = 'https://www.twipcam.com';
   const SNAPSHOT_BASE = 'https://c01.twipcam.com/cam/snapshot/';
 
