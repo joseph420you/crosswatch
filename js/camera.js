@@ -4,8 +4,6 @@
  */
 
 const CameraModule = (() => {
-  // CORS Proxy
-  const CORS_PROXY = 'https://api.allorigins.win/raw?url=';
   const TWIPCAM_BASE = 'https://www.twipcam.com';
   const SNAPSHOT_BASE = 'https://c01.twipcam.com/cam/snapshot/';
 
@@ -15,6 +13,31 @@ const CameraModule = (() => {
   const coordCache = new Map();
   // 正在進行的請求（防止重複）
   const pendingRequests = new Map();
+
+  /**
+   * 統一處理 URL 請求 (依照環境選擇 Proxy)
+   */
+  async function fetchUrl(targetUrl) {
+    const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    let finalUrl;
+
+    if (isLocal) {
+      // 本地開發：使用 corsproxy.io
+      finalUrl = `https://corsproxy.io/?url=${encodeURIComponent(targetUrl)}`;
+    } else {
+      // 線上環境 (Netlify)：使用 _redirects 定義的 Rewrite 規則
+      if (targetUrl.startsWith(TWIPCAM_BASE)) {
+        finalUrl = targetUrl.replace(TWIPCAM_BASE, '/api/twipcam');
+      } else {
+        // Fallback ( theoretically shouldn't happen for this app )
+        finalUrl = targetUrl;
+      }
+    }
+
+    const response = await fetch(finalUrl);
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    return await response.text();
+  }
 
   /**
    * 從座標 API HTML 中解析攝影機列表
@@ -87,16 +110,6 @@ const CameraModule = (() => {
   }
 
   /**
-   * 透過 CORS proxy 抓取 URL
-   */
-  async function fetchWithProxy(url) {
-    const proxyUrl = `${CORS_PROXY}${encodeURIComponent(url)}`;
-    const response = await fetch(proxyUrl);
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    return await response.text();
-  }
-
-  /**
    * 抓取座標附近的攝影機列表
    */
   async function fetchCamerasByCoordinate(lat, lon) {
@@ -109,8 +122,8 @@ const CameraModule = (() => {
 
     const promise = (async () => {
       try {
-        const url = `${TWIPCAM_BASE}/api/v1/query-cam-list-by-coordinate?lat=${lat}&lon=${lon}`;
-        const html = await fetchWithProxy(url);
+        const targetUrl = `${TWIPCAM_BASE}/api/v1/query-cam-list-by-coordinate?lat=${lat}&lon=${lon}`;
+        const html = await fetchUrl(targetUrl);
         const cameras = parseCameraListHTML(html);
 
         // 將攝影機存入快取
@@ -121,6 +134,9 @@ const CameraModule = (() => {
         });
 
         return cameras;
+      } catch (error) {
+        console.error("Error fetching cameras by coordinate:", error);
+        throw error;
       } finally {
         pendingRequests.delete(key);
       }
@@ -148,7 +164,7 @@ const CameraModule = (() => {
     const promise = (async () => {
       try {
         const url = `${TWIPCAM_BASE}/cam/${camId}`;
-        const html = await fetchWithProxy(url);
+        const html = await fetchUrl(url); // Use fetchUrl here
         const detail = parseCameraDetailHTML(html);
 
         if (detail.lat && detail.lon) {
@@ -173,6 +189,9 @@ const CameraModule = (() => {
 
           return cameraData;
         }
+        return null;
+      } catch (error) {
+        console.error(`Error fetching camera detail for ${camId}:`, error);
         return null;
       } finally {
         pendingRequests.delete(reqKey);

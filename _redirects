@@ -1,0 +1,2 @@
+# Proxy requests to Twipcam API to avoid CORS
+/api/twipcam/*  https://www.twipcam.com/api/v1/:splat  200
